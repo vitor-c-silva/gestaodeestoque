@@ -1,3 +1,6 @@
+## ATENÇÃO O CÓDIGO SE ENONTRA NA BRANCH 'deploy', PARA NÃO TER ERROS DE ACHAR O ARQUIVO!!!
+
+
 ## Gestão de Estoque de Doces e Ingredientes
 Fiz esse projeto pensando em resolver o problema que minha parceira tinha, ela vende doces na faculdade e precisava gerir seu estoque de ingredientes e de doces que ainda tinha e que ainda poderia usar.
 Então, com esse simples site, resolvi o problema dela, deixando mais simples de ver quais ingredientes ainda tinha, quantidade de cada um e também quantos doces ainda tem para venda e o qual está acabando!
