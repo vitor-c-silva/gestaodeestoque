@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Estoque - Doces</title>
+    <style>
+        :root {
+            --bg-color: #FFF0F5; /* Lavender Blush - rosa muito claro */
+            --card-bg: #FFFFFF;
+            --primary-color: #FFB6C1; /* Light Pink */
+            --primary-dark: #FF69B4; /* Hot Pink */
+            --text-color: #4A4A4A;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(255, 182, 193, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1500px; /* Aumentei um pouco para acomodar melhor as duas colunas */
+            margin: 0 auto;
+        }
+
+        h1, h2, h3 {
+            color: var(--primary-dark);
+            text-align: center;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        /* Forms & Inputs */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input, button {
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--primary-color);
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Tables & Lists */
+        .item-list {
+            list-style: none;
+            padding: 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--bg-color);
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .actions input {
+            width: 60px;
+            padding: 5px;
+        }
+
+        .actions button {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn-subtract {
+            background-color: #ff9999;
+        }
+        .btn-subtract:hover {
+            background-color: #ff6666;
+        }
+
+        /* Sweets Grid */
+        .sweets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+            padding: 8px;
+        }
+
+        .sweet-card {
+            background: var(--card-bg);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .sweet-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        .sweet-price {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .sweet-stock {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Custom Scrollbar for lists */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎀 Controle de Estoque de Doces</h1>
+
+    <div class="dashboard">
+        <!-- COLUNA ESQUERDA: INGREDIENTES -->
+        <div class="column">
+            <div class="card">
+                <h2>Adicionar Ingrediente</h2>
+                <form id="form-ingredient">
+                    <input type="text" id="ing-name" placeholder="Nome do Ingrediente (ex: Farinha)" required>
+                    <input type="number" id="ing-qty" placeholder="Quantidade (g, ml, un)" step="0.01" required>
+                    <input type="text" id="ing-unit" placeholder="Unidade (ex: kg, g, litros)" required>
+                    <button type="submit">Adicionar ao Estoque</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Estoque de Ingredientes</h2>
+                <ul class="item-list" id="ingredient-list">
+                    <!-- Ingredientes injetados via JS -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- COLUNA DIREITA: DOCES -->
+        <div class="column">
+            <div class="card">
+                <h2>Cadastrar Novo Doce</h2>
+                <form id="form-sweet">
+                    <input type="text" id="sweet-name" placeholder="Nome do Doce (ex: Brownie de Chocolate)" required>
+                    <input type="number" id="sweet-price" placeholder="Preço (R$)" step="0.01" required>
+                    <input type="number" id="sweet-qty" placeholder="Quantidade Inicial Disponível" required>
+                    <button type="submit">Cadastrar Doce</button>
+                </form>
+            </div>
+            
+            <div class="card">
+                <h2>Doces Disponíveis para Venda</h2>
+                <div class="sweets-grid" id="sweets-grid">
+                    <!-- Doces injetados via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inicialização do LocalStorage
+    let ingredients = JSON.parse(localStorage.getItem('ingredients')) || [];
+    let sweets = JSON.parse(localStorage.getItem('sweets')) || [];
+
+    // Função para salvar no LocalStorage
+    const saveData = () => {
+        localStorage.setItem('ingredients', JSON.stringify(ingredients));
+        localStorage.setItem('sweets', JSON.stringify(sweets));
+    };
+
+    // --- GERENCIAMENTO DE INGREDIENTES ---
+    const formIngredient = document.getElementById('form-ingredient');
+    const ingredientList = document.getElementById('ingredient-list');
+
+    formIngredient.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('ing-name').value;
+        const qty = parseFloat(document.getElementById('ing-qty').value);
+        const unit = document.getElementById('ing-unit').value;
+
+        // Verifica se já existe
+        const existing = ingredients.find(i => i.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+            existing.qty += qty;
+            existing.unit = unit; // atualiza unidade caso mude
+        } else {
+            ingredients.push({ id: Date.now(), name, qty, unit });
+        }
+
+        saveData();
+        renderIngredients();
+        formIngredient.reset();
+    });
+
+    window.useIngredient = (id) => {
+        const input = document.getElementById(`use-ing-${id}`);
+        const amount = parseFloat(input.value);
+        if (!amount || amount <= 0) return alert('Insira uma quantidade válida para usar.');
+
+        const ingredient = ingredients.find(i => i.id === id);
+        if (ingredient) {
+            if (ingredient.qty >= amount) {
+                ingredient.qty -= amount;
+                saveData();
+                renderIngredients();
+            } else {
+                alert('Quantidade insuficiente no estoque!');
+            }
+        }
+    };
+
+    window.removeIngredient = (id) => {
+        if(confirm('Tem certeza que deseja remover este ingrediente?')) {
+            ingredients = ingredients.filter(i => i.id !== id);
+            saveData();
+            renderIngredients();
+        }
+    }
+
+    const renderIngredients = () => {
+        ingredientList.innerHTML = '';
+        ingredients.forEach(ing => {
+            const li = document.createElement('li');
+            li.className = 'item';
+            li.innerHTML = `
+                <div>
+                    <strong>${ing.name}</strong><br>
+                    <small>Disponível: ${ing.qty.toFixed(2)} ${ing.unit}</small>
+                </div>
+                <div class="actions">
+                    <input type="number" id="use-ing-${ing.id}" placeholder="Qtd" step="0.01">
+                    <button onclick="useIngredient(${ing.id})">Usar</button>
+                    <button class="btn-subtract" onclick="removeIngredient(${ing.id})">X</button>
+                </div>
+            `;
+            ingredientList.appendChild(li);
+        });
+    };
+
+    // --- GERENCIAMENTO DE DOCES ---
+    const formSweet = document.getElementById('form-sweet');
+    const sweetsGrid = document.getElementById('sweets-grid');
+
+    formSweet.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('sweet-name').value;
+        const price = parseFloat(document.getElementById('sweet-price').value);
+        const qty = parseInt(document.getElementById('sweet-qty').value);
+
+        sweets.push({
+            id: Date.now(),
+            name,
+            price,
+            qty
+        });
+
+        saveData();
+        renderSweets();
+        formSweet.reset();
+    });
+
+    window.sellSweet = (id) => {
+        const sweet = sweets.find(s => s.id === id);
+        if (sweet) {
+            if (sweet.qty > 0) {
+                sweet.qty -= 1;
+                saveData();
+                renderSweets();
+            } else {
+                alert('Este doce está esgotado!');
+            }
+        }
+    };
+    
+    window.addSweetStock = (id) => {
+        const sweet = sweets.find(s => s.id === id);
+        if (sweet) {
+            sweet.qty += 1;
+            saveData();
+            renderSweets();
+        }
+    };
+    
+    window.removeSweet = (id) => {
+         if(confirm('Tem certeza que deseja excluir este doce do catálogo?')) {
+            sweets = sweets.filter(s => s.id !== id);
+            saveData();
+            renderSweets();
+        }
+    }
+
+    const renderSweets = () => {
+        sweetsGrid.innerHTML = '';
+        sweets.forEach(sweet => {
+            const div = document.createElement('div');
+            div.className = 'sweet-card';
+            div.innerHTML = `
+                <div class="sweet-title">${sweet.name}</div>
+                <div class="sweet-price">R$ ${sweet.price.toFixed(2).replace('.', ',')}</div>
+                <div class="sweet-stock">Estoque: <strong>${sweet.qty}</strong> unidades</div>
+                <div class="actions" style="justify-content: center; margin-bottom: 10px;">
+                    <button class="btn-subtract" onclick="sellSweet(${sweet.id})">- Vender 1</button>
+                    <button onclick="addSweetStock(${sweet.id})">+ 1</button>
+                </div>
+                <button class="btn-subtract" style="width: 100%; font-size: 0.8rem;" onclick="removeSweet(${sweet.id})">Excluir Doce</button>
+            `;
+            sweetsGrid.appendChild(div);
+        });
+    };
+
+    // Render inicial
+    renderIngredients();
+    renderSweets();
+
+</script>
+</body>
+</html>
